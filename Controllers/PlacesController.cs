@@ -8,12 +8,6 @@ using System.Net.WebSockets;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using ExplorationApi.Wrappers;
-// using Pagination.WebApi.Contexts;
-// using Pagination.WebApi.Filter;
-// using Pagination.WebApi.Helpers;
-// using Pagination.WebApi.Models;
-// using Pagination.WebApi.Services;
-// using Pagination.WebApi.Wrappers;
 
 namespace ExplorationApi.Controllers
 {
@@ -27,22 +21,25 @@ namespace ExplorationApi.Controllers
       _db = db;
     }
 
-    // [HttpGet]
-    // public ActionResult<IEnumerable<Place>> GetAction(string username, int rating)
-    // {
-    //   var query = _db.Places.AsQueryable();
+    [HttpGet]
+    public ActionResult<IEnumerable<Place>> GetAction(string username, int rating, string country)
+    {
+      var query = _db.Places.AsQueryable();
 
-    //   if (username != null)
-    //   {
-    //     query = query.Where(entry => entry.UserName == username);
-    //   }
-
-    //   if (rating != 0)
-    //   {
-    //     query = query.Where(entry => entry.Rating == rating);
-    //   }
-    //   return query.ToList();
-    // }
+      if (username != null)
+      {
+        query = query.Where(entry => entry.UserName == username);
+      }
+      if (country != null)
+      {
+        query = query.Where(entry => entry.Country == username);
+      }
+      if (rating != 0)
+      {
+        query = query.Where(entry => entry.Rating == rating);
+      }
+      return query.ToList();
+    }
 
     [HttpPost]
     public void Post([FromBody] Place place)
@@ -50,13 +47,27 @@ namespace ExplorationApi.Controllers
       _db.Places.Add(place);
       _db.SaveChanges();
     }
+    [HttpGet("rating/best")]
+    public ActionResult<IEnumerable<Place>> GetBestRating()
+    {
+      var query = _db.Places.OrderByDescending(entry => entry.Rating);
+      return query.ToList();
+    }
 
-    [HttpGet]
+    [HttpGet("rating/worst")]
+    public ActionResult<IEnumerable<Place>> GetWorstRating()
+    {
+      var query = _db.Places.OrderBy(entry => entry.Rating);
+      return query.ToList();
+    }
+
+    [HttpGet("pages/")]
     public async Task<IActionResult> GetAll([FromQuery] PaginationFilter filter)
     {
       var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
       var pagedData = await _db.Places
         .Skip((validFilter.PageNumber - 1) * validFilter.PageSize)
+        // Say we need to get the results for the third page of our website, counting 20 as the number of results we want. That would mean we want to skip the first ((3 – 1) * 20) = 40 results, and then take the next 20 and return them to the caller.
         .Take(validFilter.PageSize)
         .ToListAsync();
       var totalRecords = await _db.Places.CountAsync();
@@ -70,20 +81,26 @@ namespace ExplorationApi.Controllers
       return Ok(new Response<Place>(place));
     }
 
-    [HttpPut("{id}")]
-    public void Put(int id, [FromBody] Place place)
+    [HttpPut("{username}/{id}")]
+    public void Put(int id, [FromBody] Place place, string username)
     {
-      place.PlaceId = id;
-      _db.Entry(place).State = EntityState.Modified;
-      _db.SaveChanges();
+      if (place.UserName == username)
+      {
+        place.PlaceId = id;
+        _db.Entry(place).State = EntityState.Modified;
+        _db.SaveChanges();
+      }
     }
 
-    [HttpDelete("{id}")]
-    public void Delete(int id)
+    [HttpDelete("{username}/{id}")]
+    public void Delete(int id, [FromBody] Place place, string username)
     {
-      var placeToDelete = _db.Places.FirstOrDefault(entry => entry.PlaceId == id);
-      _db.Places.Remove(placeToDelete);
-      _db.SaveChanges();
+      if (place.UserName == username)
+      {
+        var placeToDelete = _db.Places.FirstOrDefault(entry => entry.PlaceId == id);
+        _db.Places.Remove(placeToDelete);
+        _db.SaveChanges();
+      }
     }
   }
 }
