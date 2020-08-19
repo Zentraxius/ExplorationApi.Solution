@@ -32,7 +32,7 @@ namespace ExplorationApi.Controllers
       }
       if (country != null)
       {
-        query = query.Where(entry => entry.Country == username);
+        query = query.Where(entry => entry.Country == country);
       }
       if (rating != 0)
       {
@@ -81,26 +81,21 @@ namespace ExplorationApi.Controllers
       return Ok(new Response<Place>(place));
     }
 
-    [HttpPut("{username}/{id}")]
-    public void Put(int id, [FromBody] Place place, string username)
+    [HttpPut("{id}")]
+    public void Put(int id, [FromBody] Place place)
     {
-      if (place.UserName == username)
-      {
-        place.PlaceId = id;
-        _db.Entry(place).State = EntityState.Modified;
-        _db.SaveChanges();
-      }
+      place.PlaceId = id;
+      _db.Entry(place).State = EntityState.Modified;
+      _db.SaveChanges();
     }
 
-    [HttpDelete("{username}/{id}")]
-    public void Delete(int id, [FromBody] Place place, string username)
+
+    [HttpDelete("{id}")]
+    public void Delete(int id)
     {
-      if (place.UserName == username)
-      {
-        var placeToDelete = _db.Places.FirstOrDefault(entry => entry.PlaceId == id);
-        _db.Places.Remove(placeToDelete);
-        _db.SaveChanges();
-      }
+      var placeToDelete = _db.Places.FirstOrDefault(entry => entry.PlaceId == id);
+      _db.Places.Remove(placeToDelete);
+      _db.SaveChanges();
     }
   }
 }
