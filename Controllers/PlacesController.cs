@@ -26,7 +26,7 @@ namespace ExplorationApi.Controllers
     {
       _db = db;
     }
-    
+
     // [HttpGet]
     // public ActionResult<IEnumerable<Place>> GetAction(string username, int rating)
     // {
@@ -50,7 +50,7 @@ namespace ExplorationApi.Controllers
       _db.Places.Add(place);
       _db.SaveChanges();
     }
-    
+
     [HttpGet]
     public async Task<IActionResult> GetAll([FromQuery] PaginationFilter filter)
     {
