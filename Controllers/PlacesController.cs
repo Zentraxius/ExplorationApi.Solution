@@ -61,7 +61,7 @@ namespace ExplorationApi.Controllers
       return query.ToList();
     }
 
-    [HttpGet("pages/")]
+    [HttpGet("pages/")] //pagination
     public async Task<IActionResult> GetAll([FromQuery] PaginationFilter filter)
     {
       var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
@@ -74,7 +74,7 @@ namespace ExplorationApi.Controllers
       return Ok(new PagedResponse<List<Place>>(pagedData, validFilter.PageNumber, validFilter.PageSize));
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id}")] // pagination
     public async Task<IActionResult> GetById(int id)
     {
       var place = await _db.Places.Where(a => a.PlaceId == id).FirstOrDefaultAsync();
