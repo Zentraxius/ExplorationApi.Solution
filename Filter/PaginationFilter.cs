@@ -1,4 +1,4 @@
-public class PaginationFilter
+public class PaginationFilter // for pagination
 {
   public int PageNumber { get; set; }
   public int PageSize { get; set; }

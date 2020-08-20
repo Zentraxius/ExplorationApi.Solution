@@ -8,12 +8,6 @@ using System.Net.WebSockets;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using ExplorationApi.Wrappers;
-// using Pagination.WebApi.Contexts;
-// using Pagination.WebApi.Filter;
-// using Pagination.WebApi.Helpers;
-// using Pagination.WebApi.Models;
-// using Pagination.WebApi.Services;
-// using Pagination.WebApi.Wrappers;
 
 namespace ExplorationApi.Controllers
 {
@@ -26,9 +20,9 @@ namespace ExplorationApi.Controllers
     {
       _db = db;
     }
-    
+
     [HttpGet]
-    public ActionResult<IEnumerable<Place>> GetAction(string username, int rating)
+    public ActionResult<IEnumerable<Place>> GetAction(string username, int rating, string country)
     {
       var query = _db.Places.AsQueryable();
 
@@ -36,7 +30,10 @@ namespace ExplorationApi.Controllers
       {
         query = query.Where(entry => entry.UserName == username);
       }
-
+      if (country != null)
+      {
+        query = query.Where(entry => entry.Country == country);
+      }
       if (rating != 0)
       {
         query = query.Where(entry => entry.Rating == rating);
@@ -63,8 +60,8 @@ namespace ExplorationApi.Controllers
       var query = _db.Places.OrderBy(entry => entry.Rating);
       return query.ToList();
     }
-    
-    [HttpGet("pages/")]
+
+    [HttpGet("pages/")] //pagination
     public async Task<IActionResult> GetAll([FromQuery] PaginationFilter filter)
     {
       var validFilter = new PaginationFilter(filter.PageNumber, filter.PageSize);
@@ -77,31 +74,21 @@ namespace ExplorationApi.Controllers
       return Ok(new PagedResponse<List<Place>>(pagedData, validFilter.PageNumber, validFilter.PageSize));
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id}")] // pagination
     public async Task<IActionResult> GetById(int id)
     {
       var place = await _db.Places.Where(a => a.PlaceId == id).FirstOrDefaultAsync();
       return Ok(new Response<Place>(place));
     }
 
-    // [HttpPut("{id}")]
-    // public void Put(int id, [FromBody] Place place)
-    // {
-    //   place.PlaceId = id;
-    //   _db.Entry(place).State = EntityState.Modified;
-    //   _db.SaveChanges();
-    // }
-
-    [HttpPut("{username}/{id}")]
-    public void Put(int id, [FromBody] Place place, string username)
+    [HttpPut("{id}")]
+    public void Put(int id, [FromBody] Place place)
     {
-      if(place.UserName == username)
-      {
-        place.PlaceId = id;
-        _db.Entry(place).State = EntityState.Modified;
-        _db.SaveChanges();
-      }
+      place.PlaceId = id;
+      _db.Entry(place).State = EntityState.Modified;
+      _db.SaveChanges();
     }
+
 
     [HttpDelete("{id}")]
     public void Delete(int id)
